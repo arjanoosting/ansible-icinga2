@@ -5,6 +5,44 @@
 - include_tasks: icinga2-web2-Debian.yml
   when: ansible_os_family == 'Debian'
 
+- name: IcingaWeb2 - Create configuration files
+  become: true
+  template:
+    src: "icingaweb2-config.ini.j2"
+    dest: "/{{ item.dest }}"
+    mode: 0660
+    owner: "{{ i2_webui_user }}"
+    group: "{{ i2_webui_group }}"
+  loop:
+    - dest: /etc/icingaweb2/config.ini
+      sections: "{{ i2_webui_config }}"
+    - dest: /etc/icingaweb2/roles.ini
+      sections: "{{ i2_webui_roles }}"
+    - dest: /etc/icingaweb2/authentication.ini
+      sections: "{{ i2_webui_authentication }}"
+    - dest: /etc/icingaweb2/resources.ini
+      sections: "{{ i2_webui_resources }}"
+    - dest: /etc/icingaweb2/groups.ini
+      sections: "{{ i2_webui_groups }}"
+    - dest: /etc/icingaweb2/modules/monitoring/backends.ini
+      sections: "{{ i2_webui_modules_monitoring_backends }}"
+    - dest: /etc/icingaweb2/modules/monitoring/commandtransports.ini
+      sections: "{{ i2_webui_modules_monitoring_commandtransports }}"
+    - dest: /etc/icingaweb2/modules/monitoring/config.ini
+      sections: "{{ i2_webui_modules_monitoring_config }}"
+
+- name: IcingaWeb2 - Enable modules
+  become: true
+  file:
+    src: '/usr/share/icingaweb2/modules/{{ item }}'
+    dest: '/etc/icingaweb2/enabledModules/{{ item }}'
+    owner: "{{ i2_webui_user }}"
+    group: "{{ i2_webui_group }}"
+    state: link
+  loop:
+    - doc
+    - monitoring
+
 - name: Check if IcingaWeb2 configuration is in place
   become: yes
   stat:

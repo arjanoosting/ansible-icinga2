@@ -36,28 +36,24 @@
       - git
     state: latest
   tags: icinga2-ansible-web2-ui-install
+  notify: restart apache2
 
 - name: IcingaWeb2 – Add user www-data to group icingaweb2
   user:
     name: www-data
     groups: icingaweb2
 
-- name: IcingaWeb2 – Adjust Directory Owner and Group
+- name: IcingaWeb2 – Create configutation directories
   file:
-    path: "/etc/icingaweb2/modules"
-    owner: www-data
-    group: icingaweb2
-    mode: 0755
-    state: directory
-    recurse: yes
-
-- name: IcingaWeb2 – Create Directory Owner and Group
-  file:
-    path: "/etc/icingaweb2/modules/{{ item }}"
-    owner: www-data
-    group: icingaweb2
-    mode: 0755
+    path: "/etc/icingaweb2/{{ item }}"
+    owner: "{{ i2_webui_user }}"
+    group: "{{ i2_webui_group }}"
+    mode: 02770
     state: directory
   loop:
-    - monitoring
-    - translation
+    - ""
+    - "modules"
+    - "modules/monitoring"
+    - "modules/translation"
+    - "modules/director"
+    - "enabledModules"

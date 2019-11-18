@@ -84,5 +84,76 @@ i2_webui_params:
 # {{ ansible_facts.default_ipv4.address }}
 i2_webui_connectfrom:
   - localhost
-
-
+i2_webui_default_authentication:
+  icingaweb2:
+    backend: db
+    resource: icingaweb_db
+i2_webui_default_config:
+  global:
+    show_stacktraces: "0"
+    show_application_state_messages: "1"
+    config_backend: db
+    config_resource: incingaweb_db
+  logging:
+    log: syslog
+    level: ERROR
+    application: icingaweb2
+    facility: user
+i2_webui_default_groups:
+  icingaweb2:
+    backend: db
+    resource: icingaweb_db
+i2_webui_default_resources:
+  icingaweb_db:
+    type: db
+    db: mysql
+    host: "{{ i2_webui_params.host|default('localhost') }}"
+    port: ""
+    dbname: "{{ i2_webui_params.database }}"
+    username: "{{ i2_webui_params.user }}"
+    password: "{{ i2_webui_params.password }}"
+    charset: utf8
+    use_ssl: "0"
+  icinga_ido:
+    type: db
+    db: mysql
+    host: "{{ i2_ido_params.host|default('localhost') }}"
+    port: ""
+    dbname: "{{ i2_ido_params.database }}"
+    username: "{{ i2_ido_params.user }}"
+    password: "{{ i2_ido_params.password }}"
+    charset: utf8
+    use_ssl: "0"
+i2_webui_default_roles:
+  Administrators:
+    users: "{{ i2_webui_admins|join(',') }}"
+    permissions: "*"
+    groups: Administrators
+    #i2_webui_module_monitoring_commandtransports:
+i2_webui_modules_monitoring_backends:
+  icinga:
+    type: ido
+    resource: icinga_ido
+i2_webui_modules_monitoring_commandtransports:
+  icinga2:
+    transport: api
+    host: "{{ i2_api_host }}"
+    port: "{{ i2_api_port }}"
+    username: icingaweb2 # TODO
+    password: "{{ vault_icinga_api_icingaweb_password }}" # TODO
+i2_webui_modules_monitoring_config:
+  security:
+    protected_customvars: "*pw*,*pass*,community"
+i2_webui_custom_authentication: {}
+i2_webui_custom_config: {}
+i2_webui_custom_groups: {}
+i2_webui_custom_resources: {}
+i2_webui_custom_roles: {}
+i2_webui_authentication: "{{ i2_webui_default_authentication|combine(i2_webui_custom_authentication) }}"
+i2_webui_config: "{{ i2_webui_default_config|combine(i2_webui_custom_config) }}"
+i2_webui_groups: "{{ i2_webui_default_groups|combine(i2_webui_custom_groups) }}"
+i2_webui_resources: "{{ i2_webui_default_resources|combine(i2_webui_custom_resources) }}"
+i2_webui_roles: "{{ i2_webui_default_roles|combine(i2_webui_custom_roles) }}"
+i2_webui_user: "www-data" # fixme this is httpd on RedHat
+i2_webui_group: icingaweb2
+i2_webui_admins: []
