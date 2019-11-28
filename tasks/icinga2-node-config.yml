@@ -38,7 +38,8 @@
       --key {{ i2_pki_path }}/{{ i2_hostname }}.key
       --cert {{ i2_pki_file }}
       --trustedcert {{ i2_pki_path }}/trusted_parent.crt
-      --host {{ hostvars[i2_parent_nodes[0]]['i2_hostname'] }}
+      --host {{ hostvars[i2_parent_nodes[0]]['i2_api_host'] }}
+      --port {{ hostvars[i2_parent_nodes[0]]['i2_api_port'] }}
   when: trusted_authority.stat.exists is sameas false
 
 - name: Nodes - Retrieve signed certificate and set-up agent (Top-Down)
