@@ -1,6 +1,5 @@
 {% import 'object_attributes.j2' as attributes %}
 {% macro object(item) -%}
-
 {# No longer required since icinga 2.9 ? #}
 {% set library = item.value.pop('library', None) %}
 {%- if library is defined and library is not none %}

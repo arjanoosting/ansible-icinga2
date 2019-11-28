@@ -49,8 +49,8 @@
       --ticket {{ pki_ticket.stdout }}
       --endpoint {{ hostvars[i2_parent_nodes[0]]['i2_hostname'] }}
       --trustedcert {{ i2_pki_path }}/trusted_parent.crt
-      --zone {{ i2_zonename }}
-      --parent_zone {{ i2_parent_zone }}
+      --zone '{{ i2_zonename }}'
+      --parent_zone '{{ i2_parent_zone }}'
       --parent_host {{ hostvars[i2_parent_nodes[0]]['i2_api_host'] }}
       --accept-commands
       --accept-config
