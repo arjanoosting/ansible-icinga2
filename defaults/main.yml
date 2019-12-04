@@ -84,76 +84,112 @@ i2_webui_params:
 # {{ ansible_facts.default_ipv4.address }}
 i2_webui_connectfrom:
   - localhost
-i2_webui_default_authentication:
-  icingaweb2:
-    backend: db
-    resource: icingaweb_db
-i2_webui_default_config:
-  global:
-    show_stacktraces: "0"
-    show_application_state_messages: "1"
-    config_backend: db
-    config_resource: incingaweb_db
-  logging:
-    log: syslog
-    level: ERROR
-    application: icingaweb2
-    facility: user
-i2_webui_default_groups:
-  icingaweb2:
-    backend: db
-    resource: icingaweb_db
-i2_webui_default_resources:
-  icingaweb_db:
-    type: db
-    db: mysql
-    host: "{{ i2_webui_params.host|default('localhost') }}"
-    port: ""
-    dbname: "{{ i2_webui_params.database }}"
-    username: "{{ i2_webui_params.user }}"
-    password: "{{ i2_webui_params.password }}"
-    charset: utf8
-    use_ssl: "0"
-  icinga_ido:
-    type: db
-    db: mysql
-    host: "{{ i2_ido_params.host|default('localhost') }}"
-    port: ""
-    dbname: "{{ i2_ido_params.database }}"
-    username: "{{ i2_ido_params.user }}"
-    password: "{{ i2_ido_params.password }}"
-    charset: utf8
-    use_ssl: "0"
-i2_webui_default_roles:
-  Administrators:
-    users: "{{ i2_webui_admins|join(',') }}"
-    permissions: "*"
-    groups: Administrators
-    #i2_webui_module_monitoring_commandtransports:
-i2_webui_modules_monitoring_backends:
-  icinga:
-    type: ido
-    resource: icinga_ido
-i2_webui_modules_monitoring_commandtransports:
-  icinga2:
-    transport: api
-    host: "{{ i2_api_host }}"
-    port: "{{ i2_api_port }}"
-    username: icingaweb2 # TODO
-    password: "{{ vault_icinga_api_icingaweb_password }}" # TODO
-i2_webui_modules_monitoring_config:
-  security:
-    protected_customvars: "*pw*,*pass*,community"
-i2_webui_custom_authentication: {}
-i2_webui_custom_config: {}
-i2_webui_custom_groups: {}
-i2_webui_custom_resources: {}
-i2_webui_custom_roles: {}
-i2_webui_authentication: "{{ i2_webui_default_authentication|combine(i2_webui_custom_authentication) }}"
-i2_webui_config: "{{ i2_webui_default_config|combine(i2_webui_custom_config) }}"
-i2_webui_groups: "{{ i2_webui_default_groups|combine(i2_webui_custom_groups) }}"
-i2_webui_resources: "{{ i2_webui_default_resources|combine(i2_webui_custom_resources) }}"
-i2_webui_roles: "{{ i2_webui_default_roles|combine(i2_webui_custom_roles) }}"
 i2_webui_user: "www-data" # fixme this is httpd on RedHat
 i2_webui_group: icingaweb2
 i2_webui_admins: []
+
+i2_webui_default_config:
+  authenticate:
+    file: authentication.ini
+    sections:
+      icingaweb2:
+        backend: db
+        resource: icingaweb_db
+  config:
+    file: config.ini
+    sections:
+      global:
+        show_stacktraces: "0"
+        show_application_state_messages: "1"
+        config_backend: db
+        config_resource: icingaweb_db
+      logging:
+        log: syslog
+        level: ERROR
+        application: icingaweb2
+        facility: user
+  groups:
+    file: groups.ini
+    sections:
+      icingaweb2:
+        backend: db
+        resource: icingaweb_db
+  resources:
+    file: resources.ini
+    sections:
+      icingaweb_db:
+        type: db
+        db: mysql
+        host: "{{ i2_webui_params.host|default('localhost') }}"
+        port: "{{ i2_webui_params.port|default(omit) }}"
+        dbname: "{{ i2_webui_params.database }}"
+        username: "{{ i2_webui_params.user }}"
+        password: "{{ i2_webui_params.password }}"
+        charset: utf8
+        use_ssl: "0"
+      icinga_ido:
+        type: db
+        db: mysql
+        host: "{{ i2_ido_params.host|default('localhost') }}"
+        port: "{{ i2_ido_params.port|default(omit) }}"
+        dbname: "{{ i2_ido_params.database }}"
+        username: "{{ i2_ido_params.user }}"
+        password: "{{ i2_ido_params.password }}"
+        charset: utf8
+        use_ssl: "0"
+  roles:
+    file: roles.ini
+    sections:
+      Administrators:
+        users: "{{ i2_webui_admins|join(',') }}"
+        permissions: "*"
+        groups: Administrators
+  modules_monitoring_backends:
+    file: modules/monitoring/backends.ini
+    sections:
+      icinga:
+        type: ido
+        resource: icinga_ido
+  modules_monitoring_commandtransports:
+    file: modules/monitoring/commandtransports.ini
+    sections:
+      icinga2:
+        transport: api
+        host: "{{ i2_api_host }}"
+        port: "{{ i2_api_port }}"
+        username: "{{ i2_api_webui_user }}"
+        password: "{{ i2_api_webui_password }}"
+  modules_monitoring_config:
+    file: modules/monitoring/config.ini
+    sections:
+      security:
+        protected_customvars: "*pw*,*pass*,community"
+i2_webui_default_module_config:
+  director:
+    resources:
+      sections:
+        director_db:
+          type: db
+          db: mysql
+          host: "{{ i2_director_params.host|default('localhost') }}"
+          port: ""
+          dbname: "{{ i2_director_params.database }}"
+          username: "{{ i2_director_params.user }}"
+          password: "{{ i2_director_params.password }}"
+          charset: utf8
+          use_ssl: "0"
+    modules_director_config:
+      file: modules/director/config.ini
+      sections:
+        db:
+          resource: director_db
+    modules_director_kickstart:
+      file: modules/director/kickstart.ini
+      sections:
+        config:
+          endpoint: "{{ i2_hostname }}"
+          username: director
+          password: "{{ i2_api_director_password }}"
+i2_webui_custom_config: {}
+i2_webui_config: "{{ i2_webui_default_config|combine(i2_webui_custom_config, recursive=True) }}"
+
