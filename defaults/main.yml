@@ -68,10 +68,17 @@ i2_webui_php_all: no
 i2_webui_modules_dir: "/usr/share/icingaweb2/modules"
 i2_timezone: "UTC"
 i2_webui_modules:
-  - map
-  - cube
-  - toplevelview
-  - businessprocess
+  - name: cube
+    version: v1.1.0
+  - name: map
+    version: v1.1.0
+    repo: https://github.com/nbuchwitz/icingaweb2-module-map.git
+  - name: toplevelview
+    version: v0.3.1
+  - name: ipl
+    version: v0.4.0
+  - name: businessprocess
+    version: v2.2.0
 i2_webui_params:
   database: icingaweb
   user: icingaweb

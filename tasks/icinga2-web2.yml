@@ -67,7 +67,5 @@
         ({{ ansible_facts.default_ipv4.address }}) to continue the installation
     tags: icinga2-ansible-web2-ui-install
 
-# Something here doesn't work but I don't know what… looks
-# like this will need to time out.
-# - name: IcingaWeb2 – Install additional modules
-#   import_tasks: icinga2-web2-modules.yml
+- name: IcingaWeb2 – Install additional modules
+  import_tasks: icinga2-web2-modules.yml

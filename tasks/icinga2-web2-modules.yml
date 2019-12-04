@@ -1,9 +1,45 @@
 ---
-- name: Icingaweb2 – Download modules from github
+- name: IcingaWeb2 – Download modules from github
   become: yes
   git:
-    repo: "https://github.com/Icinga/icingaweb2-module-{{ item }}.git"
-    dest: "{{ i2_webui_modules_dir }}/{{ item}}"
+    repo: "{{ item.repo|default('https://github.com/Icinga/icingaweb2-module-' + item.name +'.git') }}"
+    dest: "{{ i2_webui_modules_dir }}/{{ item.name }}"
     update: no
+    version: "{{ item.version }}"
   loop: "{{ i2_webui_modules }}"
   ignore_errors: yes
+
+- name: IcingaWeb2 - Enable modules
+  become: true
+  file:
+    src: "{{ i2_webui_modules_dir }}/{{ item.name }}"
+    dest: '/etc/icingaweb2/enabledModules/{{ item.name }}'
+    owner: "{{ i2_webui_user }}"
+    group: "{{ i2_webui_group }}"
+    state: link
+  loop: "{{ i2_webui_modules }}"
+
+- name: IcingaWeb2 - Director
+  when: i2_webui_modules | json_query('[?name==`director`]') | length > 0
+  block:
+  - name: IcingaWeb2 - Director - Check if migration is pending
+    command: icingacli director migration pending
+    register: directormigrationpending
+    check_mode: false
+    changed_when: false
+    failed_when: false
+
+  - name: IcingaWeb2 - Director - Run migration
+    command: icingacli director migration run
+    when: directormigrationpending.rc == 0
+
+  - name: IcingaWeb2 - Director - Check if kickstart is required
+    command: icingacli director kickstart required
+    register: directorkickstartrequired
+    check_mode: false
+    changed_when: false
+    failed_when: false
+
+  - name: IcingaWeb2 - Director - Run kickstart
+    command: icingacli director kickstart run
+    when: directorkickstartrequired.rc == 0
