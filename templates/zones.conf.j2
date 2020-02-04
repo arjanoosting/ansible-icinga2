@@ -62,6 +62,7 @@ object Endpoint "{{ hostvars[item].i2_hostname }}" {
  # Create Endpoints for all the nodes in child Zones
  #}
 {% for item in i2_child_nodes -%}
+{% if hostvars[item].i2_hostname is defined -%}
 object Endpoint "{{ hostvars[item].i2_hostname }}" {
 {% if i2_connection_direction == 'top-down' %}
   host = "{{ hostvars[item].i2_api_host }}" // Actively connect to child node.
@@ -70,6 +71,7 @@ object Endpoint "{{ hostvars[item].i2_hostname }}" {
   // Child node will connect to us.
 {% endif %}
 }
+{% endif %}
 
 {% endfor -%}
 
