@@ -1,6 +1,9 @@
+// {{ ansible_managed }}
+{% for item in i2_api_users|dict2items %}
 object ApiUser "{{ item.key }}" {
    password = "{{ item.value.password }}"
-   {% if item.value.permissions is defined %}
+{% if item.value.permissions is defined %}
    permissions = [ "{{ item.value.permissions | join('", "') }}" ]
-   {% endif %}
+{% endif %}
 }
+{% endfor %}
