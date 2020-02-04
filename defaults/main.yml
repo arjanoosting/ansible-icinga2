@@ -96,7 +96,7 @@ i2_webui_group: icingaweb2
 i2_webui_admins: []
 
 i2_webui_default_config:
-  authenticate:
+  authentication:
     file: authentication.ini
     sections:
       icingaweb2:

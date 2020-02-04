@@ -1,6 +1,6 @@
 {% for section, options in item.value.sections.items() %}
 [{{ section }}]
-{% for option, value in options.items() %}
+{% for option, value in options|dictsort %}
 {{ option }} = "{{ value }}"
 {% endfor %}
 {% endfor %}
