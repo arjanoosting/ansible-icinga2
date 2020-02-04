@@ -152,16 +152,12 @@
 # Blerim made i2_confd an array of locations to be included.
 - name: Master - Create Api-Users config file
   become: yes
-  blockinfile:
-    create: yes
+  template:
+    src: api-users.conf.j2
     dest: "{{ i2_zones_dir }}/{{ i2_zonename }}/api-users.conf"
-    marker: "// {mark} Ansible managed block for {{ item.key }}"
-    content: "{{ lookup('template', 'api_users_fragment.j2') }}"
     owner: "{{ i2_user }}"
     group: "{{ i2_group }}"
     mode: 0644
-    directory_mode: 0755
-  with_dict: "{{ i2_api_users }}"
   when:
     - inventory_hostname == i2_configuration_master
     - i2_api_users is defined

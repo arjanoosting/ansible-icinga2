@@ -167,6 +167,14 @@
     - i2_remove_unmanaged_objects
     - item.dest is defined
 
+- name: Add api-users.conf to the managed object files
+  set_fact:
+    managed_object_files: "{{ managed_object_files+[i2_zones_dir+'/'+i2_zonename+'/api-users.conf'] }}"
+  when:
+    - i2_remove_unmanaged_objects
+    - inventory_hostname == i2_configuration_master
+    - i2_api_users is defined
+
 - name: Removing unmanaged object files
   become: yes
   file:
