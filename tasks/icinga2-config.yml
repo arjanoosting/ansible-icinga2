@@ -73,37 +73,3 @@
     backup: "{{ i2_keep_backups }}"
   when: i2_master or i2_certificate_signed_by_ca
   notify: reload icinga2
-
-#- name: Set-up remote Zones and Endpoints for Satellites
-  #become: yes
-  #blockinfile:
-    #create: yes
-    #owner: "{{ i2_user }}"
-    #group: "{{ i2_group }}"
-    #dest: "{{ i2_zones_dir }}/{{ hostvars[item].i2_parent_zone }}/endpoints.conf"
-    #marker: "// {mark} Ansible managed block for {{ item }} (client)"
-    #content: "{{ lookup('template', 'templates/zone_fragment.conf.j2') }}"
-  #loop: "{{ groups[i2_agent_group]|default([]) }}"
-  #when:
-    #- i2_config_master
-    #- hostvars[item].i2_hostname is defined
-  #notify: reload icinga2
-
-## This isn't very elegant but the only way I could
-## think of to make this work in the short term.
-#- name: Set fact for managed endpoint files
-  #set_fact:
-    #managed_object_files: "{{
-        #(
-        #managed_object_files|default([])
-        #+ [
-            #i2_zones_dir
-            #+ '/'
-            #+ hostvars[item].i2_parent_zone
-            #+ '/endpoints.conf'
-        #]
-        #)
-        #| unique
-      #}}"
-  #loop: "{{ groups[i2_agent_group]|default([]) }}"
-  #when: i2_remove_unmanaged_objects
