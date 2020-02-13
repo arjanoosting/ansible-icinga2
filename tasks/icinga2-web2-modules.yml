@@ -22,16 +22,25 @@
 - name: IcingaWeb2 - Director
   when: i2_webui_modules | json_query('[?name==`director`]') | length > 0
   block:
+  - name: IcingaWeb2 - Director - Create database
+    mysql_db:
+      login_host: "{{ i2_director_params.host }}"
+      login_user: "{{ i2_director_params.user }}"
+      login_password: "{{ i2_director_params.password }}"
+      name: "{{ i2_director_params.database }}"
+      state: present
+
   - name: IcingaWeb2 - Director - Check if migration is pending
     command: icingacli director migration pending
     register: directormigrationpending
     check_mode: false
     changed_when: false
-    failed_when: false
+    failed_when: directormigrationpending.stdout is match('ERROR:')
 
   - name: IcingaWeb2 - Director - Run migration
     command: icingacli director migration run
     when: directormigrationpending.rc == 0
+    notify: restart icinga-director
 
   - name: IcingaWeb2 - Director - Check if kickstart is required
     command: icingacli director kickstart required
@@ -43,3 +52,36 @@
   - name: IcingaWeb2 - Director - Run kickstart
     command: icingacli director kickstart run
     when: directorkickstartrequired.rc == 0
+    notify: restart icinga-director
+
+  - name: IcingaWeb2 - Director - Add system user
+    user:
+      name: icingadirector
+      group: "{{ i2_webui_group }}"
+      shell: /bin/false
+      home: /var/lib/icingadirector
+      system: yes
+    become: yes
+
+  - name: IcingaWeb2 - Director - Create home directory
+    file:
+      path: /var/lib/icingadirector
+      owner: icingadirector
+      group: "{{ i2_webui_group }}"
+      mode: 0750
+    become: yes
+
+  - name: IcingaWeb2 - Director - Install unit file
+    copy:
+      src: icinga-director.service
+      dest: /etc/systemd/system/icinga-director.service
+    become: yes
+    notify: reload systemd
+
+  - meta: flush_handlers
+
+  - name: IcingaWeb2 - Director - Enable and start Background Daemon
+    systemd:
+      name: icinga-director
+      enabled: yes
+      state: started

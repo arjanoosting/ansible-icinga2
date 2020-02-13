@@ -1,4 +1,9 @@
 ---
+- name: reload systemd
+  become: yes
+  systemd:
+    daemon_reload: yes
+
 - name: start icinga2
   become: yes
   service:
@@ -43,6 +48,12 @@
     name: icinga2
     state: restarted
   when: i2_manage_service
+
+- name: restart icinga-director
+  become: yes
+  service:
+    name: icinga-director
+    state: restarted
 
 - name: restart php-fpm
   become: yes

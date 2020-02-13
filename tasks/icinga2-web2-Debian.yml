@@ -43,19 +43,4 @@
 - name: IcingaWeb2 – Add user www-data to group icingaweb2
   user:
     name: www-data
-    groups: icingaweb2
-
-- name: IcingaWeb2 – Create configutation directories
-  file:
-    path: "/etc/icingaweb2/{{ item }}"
-    owner: "{{ i2_webui_user }}"
-    group: "{{ i2_webui_group }}"
-    mode: 02770
-    state: directory
-  loop:
-    - ""
-    - "modules"
-    - "modules/monitoring"
-    - "modules/translation"
-    - "modules/director"
-    - "enabledModules"
+    groups: "{{ i2_webui_group }}"

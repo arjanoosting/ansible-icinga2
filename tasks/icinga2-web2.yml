@@ -12,6 +12,24 @@
     }}"
   loop: "{{ i2_webui_modules | map(attribute='name') | list  }}"
 
+- name: IcingaWeb2 – Create configuration directories
+  file:
+    path: "/etc/icingaweb2/{{ item }}"
+    owner: "{{ i2_webui_user }}"
+    group: "{{ i2_webui_group }}"
+    mode: 02770
+    state: directory
+  loop: "{{ default | union(additional) }}"
+  vars:
+    default:
+      - ""
+      - "modules"
+      - "modules/monitoring"
+      - "modules/translation"
+      - "modules/director"
+      - "enabledModules"
+    additional: "{{ i2_webui_config | json_query('*.file') | map('dirname') | list | unique }}"
+
 - name: IcingaWeb2 - Create configuration files
   become: true
   template:
