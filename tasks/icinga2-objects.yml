@@ -35,6 +35,8 @@
   set_fact:
     existing_files: "{{ existing_files|default([]) + [ item.path ] }}"
   loop: "{{ existing_objects.files }}"
+  loop_control:
+    label: "{{ item.path }}"
   when:
     - i2_remove_unmanaged_objects
 
@@ -148,24 +150,19 @@
 
 - name: Set fact Managed Objects
   set_fact:
-    managed_objects: "{{
-      managed_global_templates.results
+    managed_object_files: "{{
+      ( managed_global_templates.results
       + managed_global_objects.results
       + managed_global_apply_rules.results
       + managed_zone_templates.results
       + managed_zone_objects.results
       + managed_zone_apply_rules.results
-      + managed_zone_hosts.results
+      + managed_zone_hosts.results )
+      | selectattr('dest', 'defined')
+      | map(attribute='dest')
+      | list
     }}"
   when: i2_remove_unmanaged_objects
-
-- name: Set fact for managed object files
-  set_fact:
-    managed_object_files: "{{ managed_object_files|default([]) + [item.dest] }}"
-  loop: "{{ managed_objects }}"
-  when:
-    - i2_remove_unmanaged_objects
-    - item.dest is defined
 
 - name: Add api-users.conf to the managed object files
   set_fact:
