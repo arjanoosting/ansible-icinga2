@@ -163,13 +163,3 @@
     - i2_api_users is defined
   notify:
     - reload icinga2
-
-- name: Master – Restart Icinga2 Service on Config Master
-  service:
-    name: icinga2
-    state: started
-    enabled: yes
-  when:
-    - inventory_hostname == i2_configuration_master
-    - i2_manage_service
-

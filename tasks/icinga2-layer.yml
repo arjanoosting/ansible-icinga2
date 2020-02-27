@@ -1,0 +1,36 @@
+---
+- name: Create basic Icinga2 configuration
+  import_tasks: icinga2-config.yml
+  tags:
+    - config
+
+- name: Set up Icinga2 IDO
+  import_tasks: icinga2-ido-mysql.yml
+  when: i2_master and i2_setup_ido
+  tags:
+    - ido
+
+- name: Set up Icinga2 API and PKI
+  import_tasks: icinga2-api.yml
+  when: i2_master
+  tags:
+    - api
+
+- name: Set up Icinga2 Nodes
+  import_tasks: icinga2-node-config.yml
+  when: not i2_master and groups[i2_master_group] is defined
+  tags:
+    - nodes
+
+- name: Enable Icinga2 features
+  import_tasks: icinga2-features.yml
+  when: i2_features|flatten|length > 0
+  tags:
+    - features
+
+- name: Make sure Icinga 2 is started
+  service:
+    name: icinga2
+    state: started
+    enabled: yes
+  when: i2_manage_service
