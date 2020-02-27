@@ -14,42 +14,29 @@
   tags:
     - install
 
-- name: Create basic Icinga2 configuration
-  import_tasks: icinga2-config.yml
-  tags:
-    - config
-
-- name: Set up Icinga2 IDO
-  import_tasks: icinga2-ido-mysql.yml
-  when: i2_master and i2_setup_ido
-  tags:
-    - ido
-
-- name: Enable Icinga2 features
-  import_tasks: icinga2-features.yml
-  when: i2_features|flatten|length > 0
-  tags:
-    - features
-
-- name: Set up Icingaweb2
-  import_tasks: icinga2-web2.yml
-  when:
-    - inventory_hostname == i2_configuration_master
-    - i2_setup_webui
-  tags:
-    - webui
-
-- name: Set up Icinga2 API and PKI
-  import_tasks: icinga2-api.yml
+- name: Set up Icinga2 masters
   when: i2_master
-  tags:
-    - api
+  block:
+  - name: Setup distibuted layer
+    import_tasks: icinga2-layer.yml
 
-- name: Set up Icinga2 Nodes
-  import_tasks: icinga2-node-config.yml
-  when: not i2_master and groups[i2_master_group] is defined
-  tags:
-    - nodes
+- meta: flush_handlers
+
+- name: Set up Icinga2 satellites
+  when: i2_satellite
+  block:
+  - name: Setup distibuted layer
+    import_tasks: icinga2-layer.yml
+
+- meta: flush_handlers
+
+- name: Set up Icinga2 agents
+  when: not i2_master and not i2_satellite
+  block:
+  - name: Setup distibuted layer
+    import_tasks: icinga2-layer.yml
+
+- meta: flush_handlers
 
 - name: Set up Icinga Templates, Objects and Apply Rules
   import_tasks: icinga2-objects.yml
@@ -69,3 +56,11 @@
     state: started
     enabled: yes
   when: i2_manage_service
+
+- name: Set up Icingaweb2
+  import_tasks: icinga2-web2.yml
+  when:
+    - inventory_hostname == i2_configuration_master
+    - i2_setup_webui
+  tags:
+    - webui
