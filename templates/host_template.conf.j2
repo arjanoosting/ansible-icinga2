@@ -1,6 +1,17 @@
 // {{ ansible_managed }}
+{% import 'item_definitions.j2' as definitions %}
 {% import 'object_attributes.j2' as attributes %}
+{#
+ # When the item is an agent include the Endpoint and Zone for the this agent
+ # in the generates host configuration.
+ #}
+{% if item not in groups[i2_master_group]|union(groups[i2_satellite_group]) %}
+{% set item_parent = hostvars[item].i2_parent_nodes[0] %}
+{{ definitions.endpoint(item, item_parent, hostvars) }}
 
+{{ definitions.zone(hostvars[item].i2_zonename, hostvars[item_parent].i2_zonename, hostvars) }}
+
+{% endif %}
 object Host "{{ hostvars[item].i2_hostname }}" {
   import "{{ hostvars[item].get('i2_host_template', 'generic-host') }}"
   address = "{{ hostvars[item].i2_address }}"
