@@ -1,4 +1,5 @@
 // {{ ansible_managed }}
+{% import 'item_definitions.j2' as definitions %}
 
 /*
  * Defines a global zone for distributed setups with masters,
@@ -29,14 +30,7 @@ object Zone "director-global" {
  # Create Endpoints for all the nodes in our parent Zone
  #}
 {% for item in i2_parent_nodes -%}
-object Endpoint "{{ hostvars[item].i2_hostname }}" {
-{% if i2_connection_direction == 'top-down' %}
-  // Parent already connects to us.
-{% else %}
-  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to parent.
-  port = "{{ hostvars[item].i2_api_port }}"
-{% endif -%}
-}
+{{ definitions.endpoint(item, inventory_hostname, hostvars) }}
 
 {% endfor -%}
 
@@ -44,65 +38,37 @@ object Endpoint "{{ hostvars[item].i2_hostname }}" {
  # Create Endpoints for all the nodes in our Zone
  #}
 {% for item in i2_peer_nodes -%}
-object Endpoint "{{ hostvars[item].i2_hostname }}" {
-{% if inventory_hostname == item %}
-  // That's us
-{% elif (inventory_hostname == i2_peer_nodes[0] and i2_connection_direction == 'top-down')
-   or (inventory_hostname != i2_peer_nodes[0] and i2_connection_direction != 'top-down' ) %}
-  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to peer.
-  port = "{{ hostvars[item].i2_api_port }}"
-{% else %}
-  // Peer already connects to us.
-{% endif -%}
-}
+{{ definitions.endpoint(item, inventory_hostname, hostvars) }}
 
 {% endfor -%}
 
+{% if inventory_hostname in groups[i2_master_group] %}
 {#
  # Create Endpoints for all the nodes in child Zones
  #}
 {% for item in i2_child_nodes -%}
-{% if hostvars[item].i2_hostname is defined -%}
-object Endpoint "{{ hostvars[item].i2_hostname }}" {
-{% if i2_connection_direction == 'top-down' %}
-  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to child node.
-  port = "{{ hostvars[item].i2_api_port }}"
-{% else %}
-  // Child node will connect to us.
-{% endif %}
-}
-{% endif %}
+{{ definitions.endpoint(item, inventory_hostname, hostvars) }}
 
 {% endfor -%}
+{% endif -%}
 
 {#
  # The parent Zone of the current node
  #}
 {% if i2_parent_zone is defined -%}
-object Zone "{{ i2_parent_zone }}" {
-  endpoints = [ {{ hostvars|dict2items
-  | json_query("[?value.i2_zonename==" + "'" + i2_parent_zone + "'].key")
-  | sort|map('icinga_vars')|join(', ') }} ]
-}
+{{ definitions.zone(i2_parent_zone, '', hostvars) }}
 
 {% endif -%}{#
  # The Zone of the current node
  #}
-object Zone "{{ i2_zonename }}" {
-  endpoints = [ {{ i2_peer_nodes|map('extract', hostvars, 'i2_hostname')|map('icinga_vars')|join(', ') }} ]
-{% if i2_parent_zone is defined %}  parent = {{ i2_parent_zone|icinga_vars }}
-{% endif %}
-}
+{{ definitions.zone(i2_zonename, i2_parent_zone|default(''), hostvars) }}
 
+{% if inventory_hostname in groups[i2_master_group] %}
 {#
  # The child Zones of the current node
  #}
 {% for child_zone in i2_child_zones -%}
-object Zone "{{ child_zone }}" {
-  endpoints = [ {{ hostvars|dict2items
-  | json_query("[?value.i2_zonename==" + "'" + child_zone + "'].key")
-  | sort|map('icinga_vars')|join(', ') }} ]
-  parent = "{{ i2_zonename }}"
-}
+{{ definitions.zone(child_zone, i2_zonename, hostvars) }}
 
 {% endfor -%}
+{% endif %}

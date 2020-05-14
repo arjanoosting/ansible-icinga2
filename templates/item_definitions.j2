@@ -105,3 +105,45 @@ if ({{ condition }}) {
 }
 {% endfor %}
 {% endmacro %}
+
+{% macro endpoint(item, current, hostvars) -%}
+object Endpoint "{{ hostvars[item].i2_hostname }}" {
+{% if item == current %}
+  // That's us
+{% elif item in hostvars[current].i2_parent_nodes %}
+{% if hostvars[current].i2_connection_direction == 'top-down' %}
+  // Parent already connects to us.
+{% else %}
+  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to parent.
+  port = "{{ hostvars[item].i2_api_port }}"
+{% endif -%}
+{% elif item in hostvars[current].i2_peer_nodes %}
+{% if (current == hostvars[current].i2_peer_nodes[0] and hostvars[item].i2_connection_direction == 'top-down')
+   or (current != hostvars[current].i2_peer_nodes[0] and hostvars[item].i2_connection_direction != 'top-down' ) %}
+  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to peer.
+  port = "{{ hostvars[item].i2_api_port }}"
+{% else %}
+  // Peer already connects to us.
+{% endif -%}
+{% elif item in hostvars[current].i2_child_nodes %}
+{% if hostvars[item].i2_connection_direction == 'top-down' %}
+  host = "{{ hostvars[item].i2_api_host }}" // Actively connect to child node.
+  port = "{{ hostvars[item].i2_api_port }}"
+{% else %}
+  // Child node will connect to us.
+{% endif -%}
+{% endif %}
+{% if not hostvars[item].i2_master|default(False) and not hostvars[item].i2_satellite|default(False) %}
+  log_duration = 0
+{% endif %}
+}
+{%- endmacro %}
+
+{% macro zone(item, parent, hostvars) -%}
+{% set endpointvars = hostvars | dict2items | json_query("[?value.i2_zonename=='" + item + "'].value") %}
+object Zone "{{ item }}" {
+  endpoints = [ {{ endpointvars | map(attribute='i2_hostname') | sort | map('icinga_vars') | join(', ') }} ]
+{% if parent %}  parent = {{ parent | icinga_vars }}
+{% endif %}
+}
+{%- endmacro %}
