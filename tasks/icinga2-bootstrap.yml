@@ -159,3 +159,5 @@
   command: /usr/sbin/getenforce
   register: selinux
   when: ansible_os_family == 'RedHat'
+  changed_when: false
+  check_mode: false
