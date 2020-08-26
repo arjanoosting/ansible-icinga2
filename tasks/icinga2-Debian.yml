@@ -25,7 +25,7 @@
   apt:
     name: icinga2
     state: "{{ i2_package_state|default('present') }}"
-  notify: start icinga2
+  notify: restart icinga2
   when: i2_manage_package
 
 - name: Debian - Ensure IDO is installed on the masters
@@ -33,7 +33,7 @@
   apt:
     name: "icinga2-ido-{{ i2_ido_backend }}"
     state: "{{ i2_package_state|default('present') }}"
-  notify: start icinga2
+  notify: retart icinga2
   when:
     - i2_manage_package
     - i2_ido_backend is defined
