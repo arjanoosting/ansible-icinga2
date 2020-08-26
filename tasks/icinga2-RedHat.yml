@@ -20,9 +20,9 @@
   become: yes
   yum:
     name: icinga2
-    state: present
+    state: "{{ i2_package_state|default('present') }}"
     update_cache: yes
-  notify: start icinga2
+  notify: restart icinga2
   when: i2_manage_package
 
 - name: RedHat - Ensure IDO is installed on the masters
@@ -30,7 +30,7 @@
   yum:
     name: "icinga2-ido-{{ i2_ido_backend }}"
     state: present
-  notify: start icinga2
+  notify: restart icinga2
   when:
     - i2_manage_package
     - i2_ido_backend is defined
